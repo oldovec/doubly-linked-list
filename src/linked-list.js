@@ -2,149 +2,127 @@ const Node = require('./node');
 
 class LinkedList {
     constructor() {
-    this.length = 0;  // инициализация
-        this._head = null;
-        this._tail = null;
+        this._head=null;
+        this._tail=null;
+        this.length=0;
     }
 
     append(data) {
-    const newte = new Node(data);
-
-        if(this.length === 0) {
-            this._head = newte;
-            this._tail = newte;
-        } else { //замена tail
-            this._tail.next = newte;
-            newte.prev = this._tail;
-            this._tail = newte;
-
-            if(this.length === 1) { 
-                this._head.next = newte;
-                newte.prev = this._head;
-            }
-        }
-        this.length += 1; //обновляем длину листа
-        return this;
+       let node= new Node(data); 
+       if(this.length) {
+            this._tail.next=node;
+            node.prev=this._tail;
+            this._tail=node;
+       }
+       else {
+           this._head=node;
+           this._tail=node;
+       }
+       this.length++;
+       return this;
     }
 
-    head() {
-    return this._head.data;
+    head() { 
+        return this._head ? this._head.data: null;
     }
 
     tail() {
-        return this._tail.data;
-           }
-
-    at(index) {
-    if (index > -1) {
-            let curte = this._head; //начинаем перебор
-            let i = 0;
-            while ((curte !== null) && (i < index)) { //пока не дойдем до null в конце и индекс не станет равен заданному
-                curte = curte.next;
-                i++;
-            }
-             if(curte !== null){
-                 return curte.data;
-             }
-        } else {
-            return undefined;
-        }
+        return this._tail ? this._tail.data: null;
     }
 
-    insertAt(index, data) {
-    
-        if (index > -1) {
-            const newte = new Node(data);
-            let curte = this._head; 
-            let i = 0;
-            while ((curte !== null) && (i < index)) {
-                curte = curte.next;
-                i++;
-            }
-            newte._next = curte;
-            if(curte.prev === null) { //проработка исключения
-                newte.prev = null;
-                this._head = newte;
-                this._tail = newte;
-            } else {
-                newte.prev = curte.prev; //вставка и замена местами
-                curte.prev.next = newte;
-            }
-            curte.prev = newte; //вставка и замена местами
-            newte.next = curte;
+    at(index, flagInsert=false) { 
+        let currentNode= this._head;
+        let count=0;
+        while(count<index) {
+            currentNode=currentNode.next;
+            count++;
         }
+        if(flagInsert) return currentNode;
+        return currentNode.data;
+    }
 
-        return this;
+    insertAt(index, data) {  
+        if(!this.length){
+           let node=this.append(data);
+           return node.data; 
+        }      
+        let node= new Node(data); 
+        let currentNodeIns=this.at(index,true);   
+        
+        let beforeNodeIns=currentNodeIns.prev;
+        let nodeIns=currentNodeIns;
+        let afterNodeIns=currentNodeIns.next;
+        
+        node.prev=beforeNodeIns;
+        node.next=currentNodeIns;
+        currentNodeIns.prev=node;
+        beforeNodeIns.next=node;
+        
+        this.length++;
+
+        return node.data;
     }
 
     isEmpty() {
-    return this.length === 0;
+        return !Boolean(this._head);
     }
 
     clear() {
-    this.length = 0;
-        this._head.data = null;
-        this._tail.data = null;
-
+        this._tail=null;
+        this._head=null;
+        this.length=0;
         return this;
     }
 
     deleteAt(index) {
-    if (index > 0) {
-            let curte = this._head; //начинаем перебор с начала
-            let i = 0;
-            while ((curte !== null) && (i < index)) {
-                curte = curte.next;
-                i++;
-            }
-
-            if (curte.prev === null) { //проработка исключения, удаляем
-                this._head = curte.next;
-            } else {
-                curte.prev.next = curte.next; //esle удаляем
-            }
-
-            if(curte.next === null) { // приводим в порядок tail, если удаление в конце
-                this._tail = curte.prev;
-            } else {
-                curte.next.prev = curte.prev;
-            }
+        if(this.length==1) {
+            this.clear();
+            return this;
         }
-        return this;
+        let currentNodeDel=this.at(index,true);
+
+        let beforeNodeDel=currentNodeDel.prev;
+        let nodeDel=currentNodeDel;
+        let afterNodeDel=currentNodeDel.next;
+
+        beforeNodeDel.next=afterNodeDel;
+        afterNodeDel.prev=beforeNodeDel;
+        nodeDel=null;
+        this.length--;
     }
 
     reverse() {
-    let curte = this._head; //начало, меняем head и tail, идем с конца в начало
-        this._tail = curte;
+        let currentNodeHead= this._head;
+        let count=0;
+        while(count<this.length) {
 
-        while (curte !== null) {
-            let temp = curte.prev; 
-            curte.prev = curte.next;
-            curte.next = temp;
+            let tempReverse;
 
-            if (curte.prev !== null) { // условие перебора цикла
-                curte = curte.prev;
-            } else {
-                this._head = curte;
-                break;
-            }
+            tempReverse=currentNodeHead.next;
+            currentNodeHead.next=currentNodeHead.prev;
+            currentNodeHead.prev=tempReverse;
+            currentNodeHead=currentNodeHead.prev;
+            count++;
         }
-        return this;
+
+        let tempReverse;
+        tempReverse=this._tail;
+        this._tail=this._head;
+        this._head=tempReverse;
+
+        return this;        
     }
 
     indexOf(data) {
-    let curte = this._head; //перебор сначала
-        let i = 0;
-        while ((curte !== null) && (i < this.length)) { 
-            if (curte.data === data) { // сверяем значения с требуемым
-                return i; // если нашли, то возвращаем индекс
-            }
-            curte = curte.next; // если не нашли, перебираем дальше 
-            i++;
+        let currentNode= this._head;
+        let count=0;
+        while(count<this.length) {
+            if(currentNode.data==data) return count;
+            currentNode=currentNode.next;
+            count++;
         }
-        return -1; // если данные не совпадают с запрашиваемыми данными
+        return -1;
     }
-}
 }
 
 module.exports = LinkedList;
